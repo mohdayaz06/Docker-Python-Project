@@ -32,5 +32,12 @@ pipeline {
                 }
             }
         }
+        stage('Run Container') {
+            steps {
+                script {
+                    sh 'docker run -d -p 5000:5000 mohdayaz06/docker-python-project:latest'
+                }
+            }
+        }
     }
 }
