@@ -1,3 +1,4 @@
+apiVersion: apps/v1 
 kind: Deployment
 metadata:
   name: python-app-deployment
@@ -15,6 +16,6 @@ spec:
     spec:
       containers:
         - name: python-app
-          image: mohdayazz/python-project  
+          image: mohdayazz/python-project:latest
           ports:
             - containerPort: 80
