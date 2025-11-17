@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: python-app
-          image: mohdayazz/python-app:latest   # Replace with your image
+          image: mohdayazz/python-project  
           ports:
             - containerPort: 80
