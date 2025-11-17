@@ -2,44 +2,58 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'mohdayazz/docker-python-project'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+        IMAGE_NAME = "mohdayazz/python-project"
+        AWS_CREDS = credentials('aws-eks')
     }
 
     stages {
-        stage('Clone') {
+
+        stage('Clone Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/mohdayaz06/Docker-Python-Project.git'
+                git branch: 'main', url: 'https://github.com/mohdayaz06/Docker-Python-Project'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("${IMAGE_NAME}")
-                }
+                sh 'docker build -t $IMAGE_NAME:$BUILD_NUMBER .'
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Login to DockerHub') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        dockerImage.push('latest')
-                    }
-                }
+                sh '''
+                echo $DOCKERHUB_CREDENTIALS_PSW | docker login \
+                    -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                '''
             }
         }
 
-        stage('Run Container') {
+        stage('Push Image') {
             steps {
-                script {
-                    // Optional: stop old container if exists before running a new one
-                    sh '''
-                    docker ps -q --filter "ancestor=${IMAGE_NAME}:latest" | xargs -r docker stop
-                    docker run -d -p 5000:5000 ${IMAGE_NAME}:latest
-                    '''
-                }
+                sh 'docker push $IMAGE_NAME:$BUILD_NUMBER'
             }
         }
+
+        stage('Configure AWS') {
+            steps {
+                sh '''
+                aws configure set aws_access_key_id $AWS_CREDS_USR
+                aws configure set aws_secret_access_key $AWS_CREDS_PSW
+                aws configure set default.region ap-south-1
+
+                aws eks update-kubeconfig --name techsolutions-cluster --region ap-south-1
+                '''
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh 'kubectl apply -f Deployment.yaml'
+                sh 'kubectl apply -f Service.yaml'
+            }
+        }
+
     }
 }
