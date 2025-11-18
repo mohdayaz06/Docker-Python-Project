@@ -43,7 +43,7 @@ pipeline {
                 aws configure set aws_secret_access_key $AWS_CREDS_PSW
                 aws configure set default.region ap-south-1
 
-                aws eks update-kubeconfig --name techsolutions-cluster --region ap-south-1
+                aws eks update-kubeconfig --name technovators-cluster --region ap-south-1
                 '''
             }
         }
